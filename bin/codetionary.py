@@ -19,24 +19,62 @@ dbpath = 'code.db'
 # maybe we caould allow mirroring the remote database (in read only mode)
 
 def connect_to_database():
+  global conn
+  global c
+  conn = sqlite3.connect(dbpath)
+  c = conn.cursor()
+
+  try:
+    c.execute('''
+      CREATE TABLE languages (
+      id   INTEGER PRIMARY KEY,
+      name VARCRCHAR(100) UNIQUE NOT NULL)''')
+    c.execute('''
+      CREATE TABLE phrases (
+      id PRIMARY KEY,
+      language INTEGER,
+      text VARCRCHAR(200) NOT NULL)''')
+    # should I set the language + text to be unique?
+    c.execute('''
+      CREATE TABLE translations (
+      a INTEGER, b INTEGER)''')
+    conn.commit()  
+  except sqlite3.OperationalError, e:
+    print 'sqlite error: ', e.args[0]  # table companies already exists 
+    pass
+
   pass
 
 def add_language(name):
   print 'Adding ', name
+  try:
+    c.execute('''INSERT INTO languages (name) VALUES (?)''', (name,))
+    conn.commit()
+    print "Added"
+  except sqlite3.IntegrityError, e:
+    print 'sqlite error: ', e.args[0]
 
 def list_languages():
   print 'Available languages'
+  
+  for language in c.execute('''SELECT name FROM languages'''):
+    print language
 
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument('--add', help='add a language')
   ap.add_argument('--list', help='list the available languages', action='store_true')
   args = ap.parse_args()
-  if args["add"]:
-    add_language(args["add"])
-  if args["list"]:
+
+  connect_to_database()
+  if args.add:
+    add_language(args.add)
+  elif args.list:
     list_languages()
-    
+  else:
+    print "Usage: " + sys.argv[0] + " -h"
+
+  conn.close()
   #print args
   #print args["add"]
 #  ap.add_argument('--from', help='language from')
@@ -44,6 +82,4 @@ def main():
 #  ap.add_argument('--term', help='the term')
   
   
-  
-
 main()

@@ -14,6 +14,8 @@ dbpath = 'code.db'
 # 6) list all the languages --list
 # 7) add a language '--add perl'
 
+# Avoid adding the same language twice in different case (e.g. alway check the lower case version) 
+
 # there should a version using a remote web-database
 # but there could be a local version of it as well,
 # maybe we caould allow mirroring the remote database (in read only mode)
@@ -47,7 +49,13 @@ def connect_to_database():
 
 def add_language(name):
   print 'Adding ', name
+  #print name.lower()
   try:
+    c.execute('''SELECT name FROM languages WHERE lower(name) = ?''', (name.lower(), ))
+    exists = c.fetchone()
+    if exists:
+      print "Already in database as " + exists[0]
+      return
     c.execute('''INSERT INTO languages (name) VALUES (?)''', (name,))
     conn.commit()
     print "Added"

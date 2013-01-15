@@ -1,17 +1,24 @@
-import sys
+import sys, os
 import sqlite3
 import argparse
 
-dbpath = 'code.db'
+root = os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
+dbpath = os.environ.get("CODE_TEST_DB")
+if not dbpath:
+  dbpath = root + '/code.db'
+
+if len(sys.argv) == 1:
+  print "Usage: " + sys.argv[0] + " -h"
+  exit()
 
 # perl perldoc   python pydoc
 # perl File::Basename::basename  python 
 # *) add a language '--add perl'
 # *) list all the languages '--list'
+# *) add a term in a language  '--add perl --term perldoc'
 
 # *) delete a language if it does not have any phrases '--delete perl'
 
-# *) add a term in a language  '--add perl perldoc'
 # *) connect two terms in two languages '--add perl perldoc python pydoc'
 # *) query a term in a language and a target language '--ask perl perldoc python'
 # *) query a term in a language '--ask perl perldoc'  listing all the other languages where it has a translation
@@ -91,9 +98,12 @@ def list_languages():
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument('--add', help='add a language')
+  #ap.add_argument('term', help='term')
   ap.add_argument('--delete', help='delete a language')
   ap.add_argument('--list', help='list the available languages', action='store_true')
   args = ap.parse_args()
+  print args
+  exit()
 
   connect_to_database()
   if args.add:
